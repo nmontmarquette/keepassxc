@@ -173,6 +173,7 @@ bool ASN1Key::parsePublicRSA(QByteArray& ba, OpenSSHKey& key)
     readInt(stream, n);
     readInt(stream, e);
 
+    // Note: To properly calculate the key fingerprint, e and n are reversed per RFC 4253
     QList<QByteArray> publicData;
     publicData.append(e);
     publicData.append(n);
@@ -206,6 +207,7 @@ bool ASN1Key::parsePrivateRSA(QByteArray& ba, OpenSSHKey& key)
     readInt(stream, dq);
     readInt(stream, qinv);
 
+    // Note: To properly calculate the key fingerprint, e and n are reversed per RFC 4253
     QList<QByteArray> publicData;
     publicData.append(e);
     publicData.append(n);
