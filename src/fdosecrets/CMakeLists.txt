@@ -1,9 +1,6 @@
 if(WITH_XC_FDOSECRETS)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
-    find_package(Gcrypt 1.7.0 REQUIRED)
-    find_package(LibGPGError REQUIRED)
-
     add_library(fdosecrets STATIC
         # app settings page
         FdoSecretsPlugin.cpp
@@ -16,9 +13,6 @@ if(WITH_XC_FDOSECRETS)
 
         # setting storage
         FdoSecretsSettings.cpp
-
-        # gcrypt MPI wrapper
-        GcryptMPI.cpp
 
         # dbus objects
         objects/DBusObject.cpp
@@ -36,5 +30,5 @@ if(WITH_XC_FDOSECRETS)
         objects/DBusReturn.cpp
         objects/DBusTypes.cpp
     )
-    target_link_libraries(fdosecrets Qt5::Core Qt5::Widgets Qt5::DBus ${GCRYPT_LIBRARIES})
+    target_link_libraries(fdosecrets Qt5::Core Qt5::Widgets Qt5::DBus ${BOTAN2_LIBRARIES})
 endif()

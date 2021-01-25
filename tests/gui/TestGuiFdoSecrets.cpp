@@ -32,6 +32,7 @@
 #include "core/Config.h"
 #include "core/Tools.h"
 #include "crypto/Crypto.h"
+#include "crypto/Random.h"
 #include "gui/Application.h"
 #include "gui/DatabaseTabWidget.h"
 #include "gui/DatabaseWidget.h"
@@ -198,48 +199,22 @@ void TestGuiFdoSecrets::initTestCase()
     QVERIFY(m_plugin);
     m_mainWindow->show();
 
+
+    auto key = QByteArray::fromHex("e407997e8b918419cf851cf3345358fdf"
+                                   "ffb9564a220ac9c3934efd277cea20d17"
+                                   "467ecdc56e817f75ac39501f38a4a04ff"
+                                   "64d627e16c09981c7ad876da255b61c8e"
+                                   "6a8408236c2a4523cfe6961c26dbdfc77"
+                                   "c1a27a5b425ca71a019e829fae32c0b42"
+                                   "0e1b3096b48bc2ce9ccab1d1ff13a5eb4"
+                                   "b263cee30bdb1a57af9bfa93f");
+    m_clientCipher.reset(new DhIetf1024Sha256Aes128CbcPkcs7(key));
+
     // Load the NewDatabase.kdbx file into temporary storage
     QFile sourceDbFile(QStringLiteral(KEEPASSX_TEST_DATA_DIR "/NewDatabase.kdbx"));
     QVERIFY(sourceDbFile.open(QIODevice::ReadOnly));
     QVERIFY(Tools::readAllFromDevice(&sourceDbFile, m_dbData));
     sourceDbFile.close();
-
-    // set keys for session encryption
-    m_serverPublic = MpiFromHex("e407997e8b918419cf851cf3345358fdf"
-                                "ffb9564a220ac9c3934efd277cea20d17"
-                                "467ecdc56e817f75ac39501f38a4a04ff"
-                                "64d627e16c09981c7ad876da255b61c8e"
-                                "6a8408236c2a4523cfe6961c26dbdfc77"
-                                "c1a27a5b425ca71a019e829fae32c0b42"
-                                "0e1b3096b48bc2ce9ccab1d1ff13a5eb4"
-                                "b263cee30bdb1a57af9bfa93f");
-    m_serverPrivate = MpiFromHex("013f4f3381ef0ca11c4c7363079577b56"
-                                 "99b238644e0aba47e24bdba6173590216"
-                                 "4f1e12dd0944800a373e090e63192f53b"
-                                 "93583e9a9e50bb9d792aafaa3a0f5ae77"
-                                 "de0c3423f5820848d88ee3bdd01c889f2"
-                                 "7af58a02f5b6693d422b9d189b300d7b1"
-                                 "be5076b5795cf8808c31e2e2898368d18"
-                                 "ab5c26b0ea3480c9aba8154cf");
-    // use the same cipher to do the client side encryption, but exchange the position of client/server keys
-    m_cipher.reset(new DhIetf1024Sha256Aes128CbcPkcs7);
-    QVERIFY(m_cipher->initialize(MpiFromBytes(MpiToBytes(m_serverPublic)),
-                                 MpiFromHex("30d18c6b328bac970c05bda6af2e708b9"
-                                            "d6bbbb6dc136c1a2d96e870fabc86ad74"
-                                            "1846a26a4197f32f65ea2e7580ad2afe3"
-                                            "dd5d6c1224b8368b0df2cd75d520a9ff9"
-                                            "7fe894cc7da71b7bd285b4633359c16c8"
-                                            "d341f822fa4f0fdf59b5d3448658c46a2"
-                                            "a86dbb14ff85823873f8a259ccc52bbb8"
-                                            "2b5a4c2a75447982553b42221"),
-                                 MpiFromHex("84aafe9c9f356f7762307f4d791acb59e"
-                                            "8e3fd562abdbb481d0587f8400ad6c51d"
-                                            "af561a1beb9a22c8cd4d2807367c5787b"
-                                            "2e06d631ccbb5194b6bb32211583ce688"
-                                            "f9c2cebc22a9e4d494d12ebdd570c61a1"
-                                            "62a94e88561d25ccd0415339d1f59e1b0"
-                                            "6bc6b6b5fde46e23b2410eb034be390d3"
-                                            "2407ec7ae90f0831f24afd5ac")));
 }
 
 // Every test starts with opening the temp database
@@ -841,7 +816,7 @@ void TestGuiFdoSecrets::testItemCreate()
     // secrets
     {
         CHECKED_DBUS_LOCAL_CALL(ss, item->getSecret(sess));
-        ss = m_cipher->decrypt(ss);
+        ss = m_clientCipher->decrypt(ss);
         QCOMPARE(ss.value, QByteArray("Password"));
     }
 
@@ -960,7 +935,7 @@ void TestGuiFdoSecrets::testItemSecret()
     // plain text secret
     {
         CHECKED_DBUS_LOCAL_CALL(encrypted, item->getSecret(sess));
-        auto ss = m_cipher->decrypt(encrypted);
+        auto ss = m_clientCipher->decrypt(encrypted);
         QCOMPARE(ss.contentType, TEXT_PLAIN);
         QCOMPARE(ss.value, item->backend()->password().toUtf8());
     }
@@ -977,7 +952,7 @@ void TestGuiFdoSecrets::testItemSecret()
         auto replyMsg = iitem->call(QDBus::BlockWithGui, "GetSecret", QVariant::fromValue(sess->objectPath()));
         auto reply = QDBusPendingReply<SecretStruct>(replyMsg);
         QVERIFY(reply.isValid());
-        auto ss = m_cipher->decrypt(reply.argumentAt<0>());
+        auto ss = m_clientCipher->decrypt(reply.argumentAt<0>());
 
         QCOMPARE(ss.contentType, TEXT_PLAIN);
         QCOMPARE(ss.value, item->backend()->password().toUtf8());
@@ -992,7 +967,7 @@ void TestGuiFdoSecrets::testItemSecret()
         ss.contentType = TEXT_PLAIN;
         ss.value = "NewPassword";
         ss.session = sess->objectPath();
-        QVERIFY(!item->setSecret(m_cipher->encrypt(ss)).isError());
+        QVERIFY(!item->setSecret(m_clientCipher->encrypt(ss)).isError());
 
         QCOMPARE(item->backend()->password().toUtf8(), ss.value);
     }
@@ -1003,12 +978,12 @@ void TestGuiFdoSecrets::testItemSecret()
         expected.contentType = APPLICATION_OCTET_STREAM;
         expected.value = "NewPasswordBinary";
         expected.session = sess->objectPath();
-        QVERIFY(!item->setSecret(m_cipher->encrypt(expected)).isError());
+        QVERIFY(!item->setSecret(m_clientCipher->encrypt(expected)).isError());
 
         QCOMPARE(item->backend()->password(), QStringLiteral(""));
 
         CHECKED_DBUS_LOCAL_CALL(encrypted, item->getSecret(sess));
-        auto ss = m_cipher->decrypt(encrypted);
+        auto ss = m_clientCipher->decrypt(encrypted);
         QCOMPARE(ss.contentType, expected.contentType);
         QCOMPARE(ss.value, expected.value);
     }
@@ -1178,15 +1153,14 @@ QPointer<Session> TestGuiFdoSecrets::openSession(Service* service, const QString
         VERIFY(reply.isValid());
         return FdoSecrets::pathToObject<Session>(reply.argumentAt<1>());
     } else if (algo == DhIetf1024Sha256Aes128CbcPkcs7::Algorithm) {
-
-        DhIetf1024Sha256Aes128CbcPkcs7::fixNextServerKeys(MpiFromBytes(MpiToBytes(m_serverPrivate)),
-                                                          MpiFromBytes(MpiToBytes(m_serverPublic)));
-
-        auto replyMsg = iservice->call(
-            QDBus::BlockWithGui, "OpenSession", algo, QVariant::fromValue(QDBusVariant(m_cipher->m_publicKey)));
+        auto replyMsg = iservice->call(QDBus::BlockWithGui,
+                                       "OpenSession",
+                                       algo,
+                                       QVariant::fromValue(QDBusVariant(m_clientCipher->negotiationOutput())));
         auto reply = QDBusPendingReply<QDBusVariant, QDBusObjectPath>(replyMsg);
+        COMPARE(reply.count(), 2);
         VERIFY(reply.isValid());
-        COMPARE(qvariant_cast<QByteArray>(reply.argumentAt<0>().variant()), MpiToBytes(m_serverPublic));
+        m_clientCipher->updateClientPublicKey(reply.argumentAt<0>().variant().toByteArray());
         return FdoSecrets::pathToObject<Session>(reply.argumentAt<1>());
     }
     FAIL("Unsupported algorithm");
@@ -1228,7 +1202,7 @@ QPointer<Item> TestGuiFdoSecrets::createItem(Session* sess,
     ss.session = sess->objectPath();
     ss.value = pass.toLocal8Bit();
     ss.contentType = "plain/text";
-    ss = m_cipher->encrypt(ss);
+    ss = m_clientCipher->encrypt(ss);
 
     PromptBase* prompt = nullptr;
     auto item = coll->createItem(properties, ss, replace, prompt);

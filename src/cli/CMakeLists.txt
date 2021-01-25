@@ -86,12 +86,6 @@ if(APPLE AND WITH_APP_BUNDLE)
                                 "@executable_path/../Frameworks/QtWidgets.framework/Versions/5/QtWidgets"
                             -change /usr/local/opt/qt/lib/QtSvg.framework/Versions/5/QtSvg
                                 "@executable_path/../Frameworks/QtSvg.framework/Versions/5/QtSvg"
-                            -change /usr/local/opt/libgcrypt/lib/libgcrypt.20.dylib
-                                "@executable_path/../Frameworks/libgcrypt.20.dylib"
-                            -change /usr/local/opt/libgpg-error/lib/libgpg-error.0.dylib
-                                "@executable_path/../Frameworks/libgpg-error.0.dylib"
-                            -change /usr/local/opt/libsodium/lib/libsodium.23.dylib
-                                "@executable_path/../Frameworks/libsodium.23.dylib"
                             -change /usr/local/opt/qrencode/lib/libqrencode.4.dylib
                                 "@executable_path/../Frameworks/libqrencode.4.dylib"
                             -change /usr/local/opt/libyubikey/lib/libyubikey.0.dylib

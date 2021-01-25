@@ -490,7 +490,7 @@ if(MINGW)
 
         find_file(CRYPTO_DLL NAMES libcrypto-1_1.dll libcrypto-1_1-x64.dll)
         if (NOT CRYPTO_DLL)
-            message(FATAL_ERROR "Cannot find libcrypto dll, ensure libgcrypt is properly installed.")
+            message(FATAL_ERROR "Cannot find libcrypto dll, ensure openssl is properly installed.")
         endif()
 
         install(FILES ${OPENSSL_DLL} ${CRYPTO_DLL} DESTINATION ".")
