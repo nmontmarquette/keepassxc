@@ -1,6 +1,9 @@
 if(WITH_XC_FDOSECRETS)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
+    find_package(Gcrypt 1.7.0 REQUIRED)
+    find_package(LibGPGError REQUIRED)
+
     add_library(fdosecrets STATIC
         # app settings page
         FdoSecretsPlugin.cpp

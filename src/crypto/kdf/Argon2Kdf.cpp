@@ -200,7 +200,7 @@ int Argon2Kdf::benchmark(int msec) const
         auto algo = type() == Type::Argon2d ? "Argon2d" : "Argon2id";
         auto pwhash = Botan::PasswordHashFamily::create_or_throw(algo)->tune(
             32, std::chrono::milliseconds(msec), memory() / 1024);
-        return qMax(1ULL, pwhash->iterations());
+        return qMax(static_cast<size_t>(1), pwhash->iterations());
     } catch (std::exception& e) {
         return 1;
     }

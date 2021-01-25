@@ -20,8 +20,8 @@
 
 #include "core/Tools.h"
 #include "crypto/SymmetricCipher.h"
-#include "crypto/ssh/ASN1Key.h"
-#include "crypto/ssh/BinaryStream.h"
+#include "ASN1Key.h"
+#include "BinaryStream.h"
 
 #include <QCryptographicHash>
 #include <QRegularExpression>

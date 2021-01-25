@@ -212,15 +212,14 @@ void TestSharing::testSettingsSerialization()
     QCOMPARE(restoredActive.in, importing);
     QCOMPARE(restoredActive.out, exporting);
     if (ownCertificate.key) {
-        QCOMPARE(restoredOwn.certificate.key->private_key_bits(), ownCertificate.key->private_key_bits());
+        QCOMPARE(restoredOwn.certificate, ownCertificate);
     }
     if (ownKey.key) {
-        QCOMPARE(restoredOwn.key.key->private_key_bits(), ownKey.key->private_key_bits());
+        QCOMPARE(restoredOwn.key, ownKey);
     }
     QCOMPARE(restoredForeign.certificates.count(), foreignCertificates.count());
     for (int i = 0; i < foreignCertificates.count(); ++i) {
-        QCOMPARE(restoredForeign.certificates[i].certificate.key->private_key_bits(),
-                 foreignCertificates[i].certificate.key->private_key_bits());
+        QCOMPARE(restoredForeign.certificates[i].certificate, foreignCertificates[i].certificate);
     }
 }
 

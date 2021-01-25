@@ -21,7 +21,7 @@
 
 #include "core/Entry.h"
 #include "core/EntryAttachments.h"
-#include "crypto/ssh/OpenSSHKey.h"
+#include "OpenSSHKey.h"
 #include <QXmlStreamReader>
 #include <QtCore>
 

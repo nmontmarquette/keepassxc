@@ -19,8 +19,8 @@
 #include "SSHAgent.h"
 
 #include "core/Config.h"
-#include "crypto/ssh/BinaryStream.h"
-#include "crypto/ssh/OpenSSHKey.h"
+#include "BinaryStream.h"
+#include "OpenSSHKey.h"
 #include "sshagent/KeeAgentSettings.h"
 
 #include <QtNetwork>

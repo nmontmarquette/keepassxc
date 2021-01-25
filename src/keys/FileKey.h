@@ -19,7 +19,7 @@
 #ifndef KEEPASSX_FILEKEY_H
 #define KEEPASSX_FILEKEY_H
 
-#include <Botan/secmem.h>
+#include <botan/secmem.h>
 #include <QXmlStreamReader>
 
 #include "keys/Key.h"
